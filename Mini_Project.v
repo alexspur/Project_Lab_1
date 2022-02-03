@@ -27,8 +27,8 @@ module Mini_project(
     output LED0,LED1,LED2,LED3,LED4,LED5,LED6,LED7,LED14,LED15,
     output a, b, c, d, e, f, g, dp,
     output [3:0] an,  
-    output JA0,JA1,JA2,JA3
-    
+    output [3:0] JA
+   
     );
    
     assign LED0 = SW0;
@@ -45,7 +45,7 @@ module Mini_project(
     
     localparam N = 18;
    reg [3:0] in0, in1, in2, in3;
-    reg [3:0] JA[3:0];
+    
     reg [18:0] counter;
     reg [24:0] count;
     reg [18:0] width;
@@ -59,7 +59,7 @@ module Mini_project(
     reg [30:0] stop;
     reg LEDONOFF;
     reg JA_temp;
- 
+    reg JA0_temp, JA1_temp, JA2_temp, JA3_temp;
    
     assign LED14 = LEDONOFF;
    
@@ -100,7 +100,7 @@ module Mini_project(
         else if(SW2)
         begin
           
-             //75% duty cycle
+              //75% duty cycle
             in1 = 5;
             in2 = 7;
             in3 = 15;
@@ -108,7 +108,7 @@ module Mini_project(
         else if(SW3)
         begin
             
-             //100% duty cycle
+              //100% duty cycle
             in1 = 0;
             in2 = 0;
             in3 = 1;
@@ -116,7 +116,7 @@ module Mini_project(
         else 
         begin
             
-              //OFF
+            speed = 0; //OFF
             in1 = 0;
             in2 = 0;
             in3 = 0;
@@ -141,12 +141,13 @@ module Mini_project(
     end
    
    always@(posedge clock) begin
-        if (clock<1666667)  
-            count <= count + 1;                   //counter for 7-segment display multiplexing
+        if (clock == 1666667)  
+            count <= 0;
+                               //counter for 7-segment display multiplexing
             
         else
-            count <= 0;
-        if(counter < width)begin
+            count <= count + 1;
+        if(counter < speed)begin
                 JA_temp <= 1;
             end
             else begin
@@ -157,22 +158,34 @@ module Mini_project(
    
     always @(*)begin
     if(SW4 && counter < speed) begin //Forwards
-        JA[0] = 1;
-        JA[3] = 1;
+        JA0_temp = 1;
+        JA1_temp = 0;
+        JA2_temp = 0;
+        JA3_temp = 1;
+        
         
     end 
-    if(SW5 && counter < speed) begin //Backwards
-        JA[1] = 1;
-        JA[2] = 1;
+    else if(SW5 && counter < speed) begin //Backwards
+        JA0_temp = 0;
+        JA1_temp = 1;
+        JA2_temp = 1;
+        JA3_temp = 0;
+        
     end 
-    if(SW6 && counter < speed) begin //Left
-        JA[1] = 1;
-        JA[3] = 1;
+    else if (SW6 && counter < speed) begin //Left
+        JA0_temp = 0;
+        JA1_temp = 1;
+        JA2_temp = 0;
+        JA3_temp = 1;
+        
     end       
         
     if(SW6 && counter < speed) begin //Right
-        JA[0] = 1;
-        JA[2] = 1;
+        JA0_temp = 1;
+        JA1_temp = 0;
+        JA2_temp = 1;
+        JA3_temp = 0;
+        
     end    
 
 
@@ -230,10 +243,12 @@ module Mini_project(
    
     assign dp = 1'b1;       //The decimal point on the 7-seg display is always off
    
-    assign JA0 = JA_temp;  //Output power to the motors
-    assign JA1 = JA_temp;
-    assign JA2 = JA_temp;
-    assign JA3 = JA_temp;
+    
+   assign JA[0] = JA0_temp;
+   assign JA[1] = JA1_temp; 
+   assign JA[2] = JA2_temp; 
+   assign JA[3] = JA3_temp;
+   
    
 
 endmodule
