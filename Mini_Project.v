@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
+// Company: Oh yes
+// Engineer: James Mcarthy
 // 
 // Create Date: 02/03/2022 01:44:14 PM
 // Design Name: 
@@ -127,7 +127,7 @@ module Mini_project(
     case({SW3,SW2,SW1,SW0})
     4'b0001: speed=416667; //
     4'b0010: speed=833333;
-    4'b0100: speed=1244445;
+    4'b0100: speed=1249999;
     4'b1000: speed=1666667;
     default: speed = 0;
     endcase
@@ -141,12 +141,12 @@ module Mini_project(
     end
    
    always@(posedge clock) begin
-        if (clock == 1666667)  
-            count <= 0;
-                               //counter for 7-segment display multiplexing
+        
+        if (counter == 1666667)  
+            counter <= 0;
             
         else
-            count <= count + 1;
+            counter <= counter + 1;
         if(counter < speed)begin
                 JA_temp <= 1;
             end
@@ -239,9 +239,9 @@ module Mini_project(
     endcase
     end
    
-    assign {g, f, e, d, c, b, a} = sseg_temp;   //output the selected charater to segments a-g
+   assign {g, f, e, d, c, b, a} = sseg_temp;   //output the selected charater to segments a-g
    
-    assign dp = 1'b1;       //The decimal point on the 7-seg display is always off
+   assign dp = 1'b1;       //The decimal point on the 7-seg display is always off
    
     
    assign JA[0] = JA0_temp;
@@ -252,4 +252,3 @@ module Mini_project(
    
 
 endmodule
-
