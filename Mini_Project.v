@@ -125,34 +125,27 @@ module Mini_project(
    
     always@(*)begin                 //assigns width value to create PWM signal
     case({SW3,SW2,SW1,SW0})
-    4'b0001: speed=416667; //
-    4'b0010: speed=833333;
-    4'b0100: speed=1244445;
-    4'b1000: speed=1666667;
+    4'b0001: speed = 416667; //
+    4'b0010: speed = 833333;
+    4'b0100: speed = 1244445;
+    4'b1000: speed = 1666667;
     default: speed = 0;
     endcase
     end
     // DISPLAY STUFF (NOT IMPORTANT)
     always@(posedge clock) begin
-        if (resetn)                     //counter for 7-segment display multiplexing
+        if (reset)                     //counter for 7-segment display multiplexing
             countn <= 0;
         else
-            countn <= countn + 1;
+            countn <= count + 1;
     end
    
-   always@(posedge clock) begin
-        if (clock == 1666667)  
-            count <= 0;
-                               //counter for 7-segment display multiplexing
-            
+   always@(posedge counter) begin
+        if (counter < 1666667)  
+            counter <= 0;   
         else
-            count <= count + 1;
-        if(counter < speed)begin
-                JA_temp <= 1;
-            end
-            else begin
-                JA_temp <= 0;
-            end
+            counter <= counter + 1;
+        
     end
     
    
@@ -172,7 +165,7 @@ module Mini_project(
         JA3_temp = 0;
         
     end 
-    else if (SW6 && counter < speed) begin //Left
+    if (SW6 && counter < speed) begin //Left
         JA0_temp = 0;
         JA1_temp = 1;
         JA2_temp = 0;
@@ -187,9 +180,12 @@ module Mini_project(
         JA3_temp = 0;
         
     end    
-
-
-   end
+    if (~SW0 && ~SW1 && ~SW2 && ~SW3)begin
+        JA0_temp = 0;
+        JA1_temp = 0;
+        JA2_temp = 0;
+        JA3_temp = 0;
+    end
  
    
     always @ (*)begin       //turn on anode 0-3
