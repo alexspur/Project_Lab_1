@@ -172,7 +172,7 @@ set_property PACKAGE_PIN G2 [get_ports {JA[3]}]
 
 
 ##Pmod Header JC
-##Sch name = JC1
+#Sch name = JC1
 #set_property PACKAGE_PIN K17 [get_ports {JC[0]}]
 #set_property IOSTANDARD LVCMOS33 [get_ports {JC[0]}]
 ##Sch name = JC2
