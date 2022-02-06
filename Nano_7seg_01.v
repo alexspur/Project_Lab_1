@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module Nano_7seg(
-
+    //input clock,
     input SW0,SW1,SW2,SW3,SW4,SW5,SW6,SW7,SW15,
     output a, b, c, d, e, f, g, dp,
     output [3:0] an
@@ -37,7 +37,7 @@ module Nano_7seg(
 
 
 
-always@(*) begin    //sets speed value and updates 7-seg to display duty cycle
+always@(*) begin    //updates 7-seg to display duty cycle
         if(SW0)
         begin
             in1 = 5;
@@ -70,7 +70,7 @@ always@(*) begin    //sets speed value and updates 7-seg to display duty cycle
         end
     end
 
- always@(*) begin    //Assigns direction for the two motors and updates the 7-seg to display direction
+ always@(*) begin    //updates the 7-seg to display direction
         if(SW4)begin                            //FORWARDS
             in0 <= 11;
         end
