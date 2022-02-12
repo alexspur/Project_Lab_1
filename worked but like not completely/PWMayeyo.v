@@ -21,6 +21,7 @@
 
 
 module Pico_PWM(
+    input btnC,
     input clock,
     input reset,
     input SW0,SW1,SW2,SW3, compA, compB,
@@ -30,44 +31,33 @@ module Pico_PWM(
     reg [19:0] counter;
     reg [19:0] speed;
     reg [19:0] bufferCounter_clock;
-    reg [5:0] bufferCounter;
-    reg compBuffer;
+    reg halt;
 
     initial begin
         //speed and direction
         counter = 0;
         speed =0;
         temp_PWM = 0;
-        compBuffer = 0;
-        bufferCounter = 4;
+        bufferCounter_clock = 0;
     end
 
-    always@(posedge clock) begin        // updates during every rising edge of the clock
-        if (!compA || !compB) begin     // if either motor triggers overcurrent protection
-
-            if (bufferCounter == 4 && !compBuffer) begin      // if the counter has finished (or has just been initialized) and the buffer flag is not set --> begin
-            compBuffer <= 1;             // enable the buffer flag; 
-            bufferCounter <= 0;          // reset the higher-level precision counter;
-           // temp_PWM <= 0;
-            bufferCounter_clock <= 0;    // reset the lower-level clock counter;
-            end
-            
-            else if (bufferCounter != 4) begin       // change bufferCounter for easier buffer time control. change between "if" or "while" if error
-                bufferCounter_clock <= bufferCounter_clock + 1;     // try a blocking statement here if needed
-                if (bufferCounter_clock >= 4) begin       // arbitrary large number
-                    bufferCounter_clock <= 0;                   // reset large number
-                    bufferCounter <= bufferCounter + 1;         // increment precision counter
-                end
-            end
-
-           else if(bufferCounter == 4 && compBuffer) begin      // once the buffer is finished
-                bufferCounter_clock <= 0;       // reset the buffer clock (extraneous, use for debugging)
-                bufferCounter <= 0;         // reset the buffer precision counter (extraneous, use for debugging)
-                compBuffer <= 0;        // disable the buffer flag
-            end
-
+    always@(posedge clock) begin
+        if(btnC)
+        begin
+            halt <= 0;
         end
-        else if (!compBuffer) begin     // if the buffer flag is not enabled
+        if(!halt) begin
+            if(!compA || !compB) begin
+                bufferCounter_clock <= bufferCounter_clock + 1;
+            end
+            else begin
+                bufferCounter_clock <= 0;
+            end
+            if (bufferCounter_clock > 160000000) begin
+                temp_PWM = 0;
+                halt <= 1;
+            end
+
             if(reset)
                 counter <= 0;
             else if (counter >= 1666667)    // code to control PWM cycle based on switch cases
