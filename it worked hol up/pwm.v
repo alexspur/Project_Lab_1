@@ -61,58 +61,51 @@ module Pico_PWM(
         stop <= 1;
         
     
-        if ((!compA || !compB) && stop) begin     // if either motor triggers overcurrent protection
+        if ((!compA || !compB) && stop) begin                       // if either motor triggers overcurrent protection
 
-            if (bufferCounter == 4 && !compBuffer) begin      // if the counter has finished (or has just been initialized) and the buffer flag is not set --> begin
-            compBuffer <= 1;             // enable the buffer flag; 
-            bufferCounter <= 0;          // reset the higher-level precision counter;
-           // temp_PWM <= 0;
-            bufferCounter_clock <= 0;    // reset the lower-level clock counter;
+            if (bufferCounter == 4 && !compBuffer) begin            // if the counter has finished (or has just been initialized) and the buffer flag is not set --> begin
+            compBuffer <= 1;                                        // enable the buffer flag; 
+            bufferCounter <= 0;                                     // reset the higher-level precision counter;
+            bufferCounter_clock <= 0;                               // reset the lower-level clock counter;
             end
             
-            else if (bufferCounter != 4) begin       // change bufferCounter for easier buffer time control. change between "if" or "while" if error
+            else if (bufferCounter != 4) begin                      // change bufferCounter for easier buffer time control. change between "if" or "while" if error
                 bufferCounter_clock <= bufferCounter_clock + 1;     // try a blocking statement here if needed
-                if (bufferCounter_clock >= 4) begin       // arbitrary large number
-                    bufferCounter_clock <= 0;                   // reset large number
-                    bufferCounter <= bufferCounter + 1;         // increment precision counter
+                if (bufferCounter_clock >= 4) begin                 // arbitrary large number
+                    bufferCounter_clock <= 0;                       // reset large number
+                    bufferCounter <= bufferCounter + 1;             // increment precision counter
                 end
             end
 
-           else if(bufferCounter == 4 && compBuffer) begin      // once the buffer is finished
-                bufferCounter_clock <= 0;       // reset the buffer clock (extraneous, use for debugging)
-                bufferCounter <= 0;         // reset the buffer precision counter (extraneous, use for debugging)
-                compBuffer <= 0;        // disable the buffer flag
+           else if(bufferCounter == 4 && compBuffer) begin          // once the buffer is finished
+                bufferCounter_clock <= 0;                           // reset the buffer clock (extraneous, use for debugging)
+                bufferCounter <= 0;                                 // reset the buffer precision counter (extraneous, use for debugging)
+                compBuffer <= 0;                                    // disable the buffer flag
             end
 
         end
-         if (!compBuffer) begin     // if the buffer flag is not enabled
-            if(reset)
-                counter <= 0;
-            else if (counter >= 1666667)    // code to control PWM cycle based on switch cases
-                counter <= 0;
+        if (!compBuffer) begin                                      // if the buffer flag is not set
+            if(reset)                                               // if the reset button is pressed
+                counter <= 0;                                       // reset the PWM clock counter
+            else if (counter >= 1666667)                            // if the PWM clock has completed one cycle
+                counter <= 0;                                       // reset the clock counter
             else
-                counter <= counter + 1;
-            if(counter < speed)
-                temp_PWM <= 1;
-            
-            if (counter > speed)
-                temp_PWM <= 0;  
+                counter <= counter + 1;                             // else, increment the clock counter
+            if(counter < speed)                                     // if the clock counter's width is less than the pulse width set by the switch case statement
+                temp_PWM <= 1;                                      // set the PWM output as HIGH     
+            if (counter > speed)                                    // else
+                temp_PWM <= 0;                                      // set the PWM output as LOW
         end
     end
 
     always @ (*) begin
         case({SW2,SW0,SW3,SW1})
-//            4'b0001: speed = 733334;  // 33%
-//            4'b0010: speed = 733334;  // 44% 
-//            4'b0100: speed = 1100001; // 66%
-//            4'b1000: speed = 1666668; // 100%
-//            default : speed= 0;
 
-            4'b0100: speed = 21'd416667; // 25%
-            4'b0001: speed = 21'd833333; // 50% 
-            4'b1000: speed = 21'd1250000; // 75%
-            4'b0010: speed = 21'd1566667; // 100%
-            default : speed= 21'd0;
+            4'b0100: speed = 21'd416667;  // 25% duty cycle
+            4'b0001: speed = 21'd833333;  // 50% duty cycle
+            4'b1000: speed = 21'd1250000; // 75% duty cycle
+            4'b0010: speed = 21'd1566667; // 100% duty cycle
+            default : speed= 21'd0;       //
         endcase
     end
 
