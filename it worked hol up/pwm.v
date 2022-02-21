@@ -98,8 +98,8 @@ module Pico_PWM(
         end
     end
 
-    always @ (*) begin
-        case({SW2,SW0,SW3,SW1})
+    always @ (*) begin                    // at every positive and negative edge of the clock
+        case({SW2,SW0,SW3,SW1})           // if SW0, SW1, SW2, or SW3 are on:
 
             4'b0100: speed = 21'd416667;  // 25% duty cycle
             4'b0001: speed = 21'd833333;  // 50% duty cycle
@@ -110,6 +110,6 @@ module Pico_PWM(
     end
 
 
-    assign enableA = temp_PWM;
-    assign enableB = temp_PWM;
+    assign enableA = temp_PWM;            // assign the enable pin of motor A to temp_PWM
+    assign enableB = temp_PWM;            // assign the enable pin of motor B to temp_PWM
 endmodule
