@@ -28,8 +28,8 @@ module Pico_project_MotorDriver(
 	output reg [3:0] direction,
     output JA1, JA2, JA3, JA4
     );
-		//-------------STATE DECODING----------------------------------		
-        localparam stop = 4'b0000;
+	//-------------STATE DECODING----------------------------------		
+        	localparam stop = 4'b0000;
 		localparam forward = 4'b0001;
 		localparam backward = 4'b0010;
 		localparam right = 4'b0100;
@@ -47,41 +47,29 @@ module Pico_project_MotorDriver(
 			
         end
 //----------CHANGE DETECTION BASED CONTROL-----------------------------------
-        always @ (*) begin
-            if(reset || compA == 0 || compB == 0) begin
-                direction = stop_control;
-                
-                
-                end
-            else begin
-			case(state)
-				stop : begin
-					direction = 0;
-					
+	always @ (*) begin						// at every positive and negative edge of the clock
+		if(reset || compA == 0 || compB == 0) begin			// if the reset button is pressed or overcurrent protection is triggered
+                	direction = stop_control;					// stop all movement
+                end								
+            	else begin							// else
+			case(state)							// case statement for the "state" input
+				stop : begin							// if the case is "stop" 
+					direction = 0;							// no direction
 				end
-				forward : begin
-					direction = forward_control;
-
+				forward : begin							// if the case is "forward"
+					direction = forward_control;					// go forwards
 				end
-				
-				backward : begin
-					direction = backward_control;
-					
+				backward : begin						// if the case is "backward"
+					direction = backward_control;					// go backwards
 				end
-				
-				right : begin
-					direction = right_control;
-					
+				right : begin							// if the case is "right"
+					direction = right_control;					// turn right
 				end
-				
-				left : begin
-					direction = left_control;
-					
+				left : begin							// if the case is "left"
+					direction = left_control;					// turn left
 				end
-				
-				default : begin
-					direction = 0;
-					
+				default : begin							// if no switch is on
+					direction = 0;							// no direction
 				end
 			endcase
 		  end
