@@ -104,7 +104,7 @@ module Pico_PWM(
             4'b0100: speed = 21'd416667;  // 25% duty cycle
             4'b0001: speed = 21'd833333;  // 50% duty cycle
             4'b1000: speed = 21'd1250000; // 75% duty cycle
-            4'b0010: speed = 21'd1566667; // 100% duty cycle
+            4'b0010: speed = 21'd1566667; // 94% duty cycle
             default : speed= 21'd0;       // 0% duty cycle
         endcase
     end
