@@ -1,9 +1,9 @@
 module IPS_tutorial (
     input signal,
-    output LED,
+    output LED
 );
 
-assing LED = ~signal;
+assign LED = ~signal;
 
 endmodule
 
