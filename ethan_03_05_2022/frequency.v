@@ -33,7 +33,7 @@ module Frequency_Signal_Detection(
     end
 
 
-    always@(*) begin
+    always@(posedge clock) begin
         if (counter == 0) begin     // if one cycle completes
             counter <= clock_max;   // reset to max
 
