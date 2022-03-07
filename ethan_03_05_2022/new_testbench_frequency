@@ -1,0 +1,28 @@
+`timescale 1ns / 1ps
+module frequencytest();
+    reg JB7, JB8, JB9, clock;
+    wire [1:0] forward_signal, right_signal, left_signal;
+    wire signal_reset;
+    Frequency_Signal_Detection UUT (.clock(clock), .JB7(JB7), .JB8(JB8), .JB9(JB9),
+                                    .forward_signal(forward_signal), .left_signal(left_signal),
+                                    .right_signal(right_signal), .signal_reset(signal_reset));
+    initial begin
+        clock = 0;
+        {JB7, JB8, JB9} = 0;
+    end
+    always #5 clock = ~clock;
+//    always @(posedge clock) begin
+//        if (delay == 100000) begin // it's just 5 million divided by 50, so enemy detection
+//            JB7 <= ~JB7;
+//            JB8 <= ~JB8;
+//            JB9 <= ~JB9; 
+//            delay <= 0; end
+//        else
+//            delay <= delay + 1;
+//    end
+always #1666667 JB7 = ~JB7;
+always #500000 JB8 = ~JB8;
+always #1666667 JB9 = ~JB9;
+
+
+endmodule
