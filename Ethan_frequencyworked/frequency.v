@@ -1,73 +1,123 @@
 `timescale 1ns / 1ps
 
-module PICO_MAIN(
-input clock,
-input SW1,SW2,SW3,SW4,SW5,SW6,SW7, SW0,
-input compA, compB, btnC, btnR, JB1, JB2, JB3, JB7, JB8, JB9,
-	
-	output enableA,enableB,
-    output JA1,JA2,JA3,JA4,
-    output a, b, c, d, e, f, g, dp,
-    output [3:0] an,
-    
-    output LED0,LED1,LED2,LED3,LED4,LED5,LED6,LED7,LED9,LED12,LED13
-    );
-    wire [2:0] speed;
-    wire [3:0] direction;
-    wire [1:0] forward_signal;
-    wire [1:0] left_signal;
-    wire [1:0] right_signal;
-	wire end_reset;
-	
 
-	Frequency_Signal_Detection U1(
-        .JB7(JB7), .JB8(JB8), .JB9(JB9), .clock(clock),
-        .forward_signal(forward_signal[1:0]), .left_signal(left_signal[1:0]), .right_signal(right_signal[1:0]),
-        .LED9(LED9), .LED12(LED12), .LED13(LED13)
+module Frequency_Signal_Detection(
+    input JB7, JB8, JB9, clock,
+    output [1:0] forward_signal, left_signal, right_signal,
+    output LED9, LED12, LED13
     );
-	
-	Pico_PWM PWM1(
-		.clock(clock),.reset(reset),
-		
-		
-		.SW0(SW0),.SW1(SW1), .SW2(SW2), .SW3(SW3),
-		
-		.compA(compA), .compB(compB),
-		
-		.enableA(enableA), .enableB(enableB), .btnC(btnC), .JB1(JB1)
-		
-	);
-	
-	Pico_project_switches InputControl1(
-		.SW0(SW0), .SW1(SW1), .SW2(SW2), .SW3(SW3),
-        .SW4(SW4), .SW5(SW5), .SW6(SW6), .SW7(SW7),.SW15(SW15),
-		
-		.LED0(LED0),.LED1(LED1),.LED2(LED2),
-		.LED3(LED3),.LED4(LED4),.LED5(LED5),
-		.LED6(LED6),.LED7(LED7), .compA(compA), .compB(compB), .JB1(JB1), .JB2(JB2),
-		
-		
-		.end_reset(end_reset)
-	);
-	
-	Pico_project_MotorDriver MotorDriver1(
-        .reset(reset),
-        
-        .compA(compA), .compB(compB),
-		.direction(direction[3:0]),
-        
-        .JA1(JA1), .JA2(JA2),
-        .JA3(JA3), .JA4(JA4), .JB1(JB1), .JB2(JB2), .JB3(JB3)
-    );
-    
-    Pico_7seg display1(
-    .clock(clock),.SW0(SW0), .SW1(SW1), .SW2(SW2), .SW3(SW3), .compA(compA), .compB(compB),
-    .SW4(SW4), .SW5(SW5), .SW6(SW6), .SW7(SW7),.SW15(SW15),
-    
-    .a(a), .b(b), .c(c), .d(d), .e(e), .f(f), .g(g), .dp(dp), .an(an), .btnR(btnR),
-    .forward_signal(forward_signal[1:0]), .left_signal(left_signal[1:0]), .right_signal(right_signal[1:0])
-    );
+    reg LED9_temp, LED12_temp, LED13_temp;
+    reg [31:0] counter;
+    reg [16:0] forward_counter;
+    reg [16:0] left_counter;
+    reg [16:0] right_counter;
+    reg last_forward, last_left, last_right;
+    reg [5:0] signal_temp, last_signal;
+    parameter   friendly_freq_high = 33,
+                friendly_freq_low = 8,
+                enemy_freq_high = 90,
+                enemy_freq_low = 34,
+                clock_max = 5000000;
 
 
-	
+    initial begin
+        counter = 0;
+        last_forward = 0;
+        last_left = 0;
+        last_right = 0;
+        forward_counter = 0;   
+        left_counter = 0;      
+        right_counter = 0;
+        signal_temp[1:0] <= 0;
+        signal_temp[5:4] <= 0;
+        signal_temp[3:2] <= 0;
+    end
+
+
+    always@(posedge clock) begin
+        if (counter == 0) begin     // if one cycle completes
+            counter <= clock_max;   // reset to max
+            if(last_signal[1:0] == 2'b00) begin
+                LED13_temp <= 1;
+                LED12_temp <= 0;
+                LED9_temp <= 0; end
+            else if(last_signal[1:0] == 2'b01) begin
+                LED9_temp <= 1;
+                LED13_temp <= 0;
+                LED12_temp <= 0; end
+            else if(last_signal[1:0] == 2'b10) begin
+                LED12_temp <= 1;
+                LED9_temp <= 0;
+                LED13_temp <= 0; end
+
+            forward_counter = 0;   // reset forward counter
+            left_counter = 0;      // reset left counter
+            right_counter = 0;     // reset right counter
+            
+            last_signal[1:0] <= signal_temp[1:0];
+            last_signal[3:2] <= signal_temp[3:2];
+            last_signal[5:4] <= signal_temp[5:4];     
+        end
+        else begin
+            counter <= counter - 1; //decrement
+
+            if (JB7 != last_forward && last_forward == 0)
+                forward_counter <= forward_counter + 1;
+            if (JB8 != last_left && last_left == 0)
+                left_counter <= left_counter + 1;
+            if (JB9 != last_right && last_right == 0)
+                right_counter <= right_counter + 1;
+
+            last_forward <= JB7;
+            last_left <= JB8;
+            last_right <= JB9;
+            //--------------------FORWARD SIGNAL CONDITION CHECK---------------------//
+            if (((forward_counter <= friendly_freq_high) && (forward_counter >= friendly_freq_low))) begin
+                signal_temp[1:0] <= 2'b01; // friendly 
+                //LED9_temp <= 1; 
+                end
+            else if ((forward_counter <= enemy_freq_high && forward_counter >= enemy_freq_low)) begin
+                signal_temp[1:0] <= 2'b10; // enemy
+                //LED12_temp <= 1; 
+                end
+            else begin
+                signal_temp[1:0] <= 2'b00; // no detection
+                //LED13_temp <= 1; 
+                end
+            //--------------------LEFT SIGNAL CONDITION CHECK---------------------//
+            if ((left_counter <= friendly_freq_high && left_counter >= friendly_freq_low)) begin  //&& counter <= clock_thresh
+                signal_temp[5:4] <= 2'b01;
+                //LED9_temp <= 1; 
+                end
+            else if ((left_counter >= enemy_freq_low && left_counter <= enemy_freq_high)) begin
+                signal_temp[5:4] <= 2'b10;
+                //LED9_temp <= 1; 
+                end
+            else if ((left_counter < friendly_freq_low || left_counter > enemy_freq_high)) begin
+                signal_temp[5:4] <= 2'b00;
+                //LED9_temp <= 0; 
+                end
+        //--------------------RIGHT SIGNAL CONDITION CHECK---------------------//
+        if ((right_counter <= friendly_freq_high && right_counter >= friendly_freq_low)) begin
+            signal_temp[3:2] <= 2'b01;
+            //LED9_temp <= 1; 
+            end
+        else if ((right_counter <= enemy_freq_high && right_counter >= enemy_freq_low)) begin
+            signal_temp[3:2] <= 2'b10;
+            //LED9_temp <= 1; 
+            end
+        else begin
+            signal_temp[3:2] <= 2'b00;
+            //LED9_temp <= 0; 
+            end
+
+        end
+    end
+    assign LED9 = LED9_temp;
+    assign LED12 = LED12_temp;
+    assign LED13 = LED13_temp;
+    assign forward_signal[1:0] = last_signal[1:0];
+    assign right_signal[1:0] = last_signal[3:2];
+    assign left_signal[1:0] = last_signal[5:4];
+
 endmodule
