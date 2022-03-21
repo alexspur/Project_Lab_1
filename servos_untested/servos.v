@@ -5,21 +5,22 @@ module servo_controller(
     input [1:0] forward_signal, left_signal, right_signal,
     output aim_servo, fire_servo, aiming
 );
-    reg [21:0] counter;
+    reg [21:0] counter, fire_counter;
     reg aiming_reg, firing_reg, fired, aiming_temp;
     reg [17:0] aim_control = 0;
     reg [17:0] fire_control = 0;
     reg [17:0] release_next = 0;    // initialize this to whatever then start incrementing by release_rband for each fire
-    parameter   aim_left = 33,      // full left turn
-                aim_right = 8,      // full right turn
-                aim_forward = 90,   // forward on servo
-                release_rband = 3; // enough spin to release a single rubber band
+    parameter   aim_left = 3300,      // full left turn
+                aim_right = 8000,      // full right turn
+                aim_forward = 9000,   // forward on servo
+                release_rband = 30000; // enough spin to release a single rubber band
     initial begin
         counter = 0;
         aiming_temp = 0;
         aiming_reg = 0;
         firing_reg = 0;
         fired = 0;
+        fire_counter = 0;
     end
     
     
@@ -31,10 +32,13 @@ module servo_controller(
             aiming_reg <= 1;
         else
             aiming_reg <= 0;
-        if(counter < ('d100000 + fire_control))
+        if(counter < ('d100000 + fire_control)) begin
             firing_reg <= 1;
-        else begin
+            fire_counter <= fire_counter + 1; end
+        else
             firing_reg <= 0;
+        if (fire_counter > 'd3333333) begin
+            fire_counter <= 'd0;
             release_next <= release_next + release_rband;   // get ready to fire the next rubber band
             fired <= 1; end     // latch so you don't fire twice
             
