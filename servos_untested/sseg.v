@@ -60,10 +60,10 @@ always@(posedge clock) begin    //sets speed value and updates 7-seg to display 
         
         
         if ((compA == 0 || compB == 0) && stop1 == 1)begin
-            in0 <= 0;
-            in1 <= 14;
-            in2 <= 13;
-            in3 <= 13;
+            in0 <= 13;
+            in1 <= 13;
+            in2 <= 14;
+            in3 <= 0;
         end
 
         if ((forward_signal[1:0] == 2'b01 || left_signal[1:0] == 2'b01 || right_signal[1:0] == 2'b01) && !stop1) begin
