@@ -14,7 +14,7 @@ module servo_controller(
         counter <= counter  + 1;
         if (counter == 'd1999999) // maybe change to 10ms instead of 20ms period width? ie 1999999 --> 999999
             counter <= 0;
-        if(counter < ('d100000 + control))
+        if(counter < ('d70000 + control)) // 70000 correlates to 0 degrees for the HS-422 servo
             servo_reg <= 1;
         else
             servo_reg <= 0;
@@ -22,9 +22,9 @@ module servo_controller(
         if (SW8)
         control <= 'd0;
         if (SW9)
-        control <= 'd100000;
+        control <= 'd50000;
         if (SW10)
-        control <= 'd200000;
+        control <= 'd150000;
         
     end
 
