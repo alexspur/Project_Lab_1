@@ -10,10 +10,10 @@ module servo_controller(
     reg [17:0] aim_control = 0;
     reg [17:0] fire_control = 0;
     reg [17:0] release_next = 0;    // initialize this to whatever then start incrementing by release_rband for each fire
-    parameter   aim_left = 33,      // full left turn
-                aim_right = 8,      // full right turn
-                aim_forward = 90,   // forward on servo
-                release_rband = 3; // enough spin to release a single rubber band
+    parameter   aim_left = 33,      // full left turn ETHAN change this to 0
+                aim_right = 8,      // full right turn ETHAN change this to 100000
+                aim_forward = 90,   // forward on servo ETHAN change this to 200000
+                release_rband = 3; // enough spin to release a single rubber band ETHAN a 45 degree turn is 45) 50000 - 90) 100000 - 135) 150000
     initial begin
         counter = 0;
         aiming_temp = 0;
@@ -25,13 +25,13 @@ module servo_controller(
     
     always @(posedge clock) begin
         counter <= counter  + 1;
-        if (counter == 'd1999999) // maybe change to 10ms instead of 20ms period width? ie 1999999 --> 999999
+        if (counter == 'd1999999) // Good value
             counter <= 0;
-        if(counter < ('d100000 + aim_control))
+        if(counter < ('d70000 + aim_control))
             aiming_reg <= 1;
         else
             aiming_reg <= 0;
-        if(counter < ('d100000 + fire_control))
+        if(counter < ('d70000 + fire_control))
             firing_reg <= 1;
         else begin
             firing_reg <= 0;
