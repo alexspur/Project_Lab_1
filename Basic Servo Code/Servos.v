@@ -22,9 +22,9 @@ module servo_controller(
         if (SW8)
         control <= 'd0;
         if (SW9)
-        control <= 'd50000;
+        control <= 'd50000; // 45 degrees
         if (SW10)
-        control <= 'd150000;
+        control <= 'd150000; // 135 degrees
         
     end
 
