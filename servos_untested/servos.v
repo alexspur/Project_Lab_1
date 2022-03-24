@@ -5,39 +5,70 @@ module servo_controller(
     input [1:0] forward_signal, left_signal, right_signal,
     output aim_servo, fire_servo, aiming
 );
-    reg [21:0] counter;
+    reg [21:0] counter, fire_counter;
     reg aiming_reg, firing_reg, fired, aiming_temp;
+    reg [2:0] how_many_times_has_this_fucking_retard_fired;
     reg [17:0] aim_control = 0;
     reg [17:0] fire_control = 0;
     reg [17:0] release_next = 0;    // initialize this to whatever then start incrementing by release_rband for each fire
-    parameter   aim_left = 33,      // full left turn ETHAN change this to 0
-                aim_right = 8,      // full right turn ETHAN change this to 100000
-                aim_forward = 90,   // forward on servo ETHAN change this to 200000
-                release_rband = 3; // enough spin to release a single rubber band ETHAN a 45 degree turn is 45) 50000 - 90) 100000 - 135) 150000
+    parameter   aim_left = 0,      // full left turn
+                aim_right = 100000,      // full right turn
+                aim_forward = 200000,   // forward on servo
+                release_rband = 50000; // enough spin to release a single rubber band
     initial begin
         counter = 0;
         aiming_temp = 0;
         aiming_reg = 0;
         firing_reg = 0;
         fired = 0;
+        fire_counter = 0;
+        release_next = 0;
+        how_many_times_has_this_fucking_retard_fired = 0;
     end
     
     
     always @(posedge clock) begin
         counter <= counter  + 1;
-        if (counter == 'd1999999) // Good value
+        if (counter == 'd1999999) // maybe change to 10ms instead of 20ms period width? ie 1999999 --> 999999
             counter <= 0;
         if(counter < ('d70000 + aim_control))
             aiming_reg <= 1;
         else
             aiming_reg <= 0;
-        if(counter < ('d70000 + fire_control))
+        if(counter < ('d70000 + fire_control)) begin
             firing_reg <= 1;
-        else begin
+            fire_counter <= fire_counter + 1; end
+        else
             firing_reg <= 0;
-            release_next <= release_next + release_rband;   // get ready to fire the next rubber band
-            fired <= 1; end     // latch so you don't fire twice
+        if (fire_counter > 'd3333333) begin
+            fire_counter <= 'd0;
+            fired <= 1;     // latch so you don't fire twice
             
+            if(how_many_times_has_this_fucking_retard_fired == 2'd0) begin
+                how_many_times_has_this_fucking_retard_fired <= how_many_times_has_this_fucking_retard_fired + 1;
+                release_next <= 0; // get ready to fire the next rubber band
+            end
+            
+            else if(how_many_times_has_this_fucking_retard_fired == 2'd1) begin
+                how_many_times_has_this_fucking_retard_fired <= how_many_times_has_this_fucking_retard_fired + 1;
+                release_next <= 50000;
+            end
+                        
+            else if(how_many_times_has_this_fucking_retard_fired == 2'd2) begin
+                how_many_times_has_this_fucking_retard_fired <= how_many_times_has_this_fucking_retard_fired + 1;
+                release_next <= 100000;
+            end
+                
+            else if(how_many_times_has_this_fucking_retard_fired == 2'd3) begin
+                how_many_times_has_this_fucking_retard_fired <= how_many_times_has_this_fucking_retard_fired + 1;
+                release_next <= 150000;
+            end
+                        
+            else if(how_many_times_has_this_fucking_retard_fired > 2'd3) begin
+                how_many_times_has_this_fucking_retard_fired <= 0;
+                release_next <= 0;
+            end
+        end 
 
         if (forward_signal == 2'b10  && !fired)                 // front phototransistor detects new enemy
             fire_control <= release_next;                           // make it turn enough to fire once
