@@ -5,9 +5,10 @@ module servo_controller(
     input [1:0] forward_signal, left_signal, right_signal,
     output aim_servo, fire_servo, aiming
 );
-    reg [21:0] counter, fire_counter;
+    reg [21:0] counter;
+    reg [23:0] fire_counter;
     reg aiming_reg, firing_reg, fired, aiming_temp;
-    reg [2:0] how_many_times_has_this_fool_fired;
+    reg [2:0] how_many_times_has_this_fool_fired, fool_next;
     reg [17:0] aim_control = 0;
     reg [17:0] fire_control = 0;
     reg [17:0] release_next = 0;    // initialize this to whatever then start incrementing by release_rband for each fire
@@ -24,6 +25,7 @@ module servo_controller(
         fire_counter = 0;
         release_next = 0;
         how_many_times_has_this_fool_fired = 0;
+        fool_next = 1;
     end
     
     
@@ -35,43 +37,39 @@ module servo_controller(
             aiming_reg <= 1;
         else
             aiming_reg <= 0;
-        if(counter < ('d70000 + fire_control)) begin
+        if(counter < ('d70000 + release_next))
             firing_reg <= 1;
-            fire_counter <= fire_counter + 1; end
         else
             firing_reg <= 0;
-        if (fire_counter > 'd3333333) begin
+        if (fire_counter > 'd10) begin
             fire_counter <= 'd0;
             fired <= 1;     // latch so you don't fire twice
-            
-            if(how_many_times_has_this_fool_fired == 2'd0) begin
-                how_many_times_has_this_fool_fired <= how_many_times_has_this_fool_fired + 1;
-                release_next <= 0; // get ready to fire the next rubber band
-            end
-            
-            else if(how_many_times_has_this_fool_fired == 2'd1) begin
-                how_many_times_has_this_fool_fired <= how_many_times_has_this_fool_fired + 1;
-                release_next <= 50000;
-            end
                         
-            else if(how_many_times_has_this_fool_fired == 2'd2) begin
-                how_many_times_has_this_fool_fired <= how_many_times_has_this_fool_fired + 1;
+            if(how_many_times_has_this_fool_fired == 'd0) begin
+                how_many_times_has_this_fool_fired <= 'd1;
+                release_next <= 50000; // get ready to fire the next rubber band
+            end
+            
+            if(how_many_times_has_this_fool_fired == 'd1) begin
+                how_many_times_has_this_fool_fired <= 'd2;
                 release_next <= 100000;
             end
-                
-            else if(how_many_times_has_this_fool_fired == 2'd3) begin
-                how_many_times_has_this_fool_fired <= how_many_times_has_this_fool_fired + 1;
-                release_next <= 150000;
-            end
                         
-            else if(how_many_times_has_this_fool_fired > 2'd3) begin
+            if(how_many_times_has_this_fool_fired == 'd2) begin
+                how_many_times_has_this_fool_fired <= 'd3;
+                release_next <= 150000;
+            end 
+                        
+            if(how_many_times_has_this_fool_fired >= 'd3) begin
                 how_many_times_has_this_fool_fired <= 0;
                 release_next <= 0;
+                fool_next = 1;
             end
         end 
 
-        if (forward_signal == 2'b10  && !fired)                 // front phototransistor detects new enemy
+        if (forward_signal == 2'b10  && !fired) begin                 // front phototransistor detects new enemy
             fire_control <= release_next;                           // make it turn enough to fire once
+            fire_counter <= fire_counter + 1; end
         else if (left_signal == 2'b10 && !fired) begin          // left phototransistor detects new enemy
             aim_control <= aim_left;                                // make it turn all the way to the left
             aiming_temp <= 1; end                                   // stop the rover     
