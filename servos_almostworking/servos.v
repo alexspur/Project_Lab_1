@@ -8,13 +8,13 @@ module servo_controller(
     reg [21:0] counter;
     reg [23:0] fire_counter;
     reg aiming_reg, firing_reg, fired, aiming_temp;
-    reg [2:0] how_many_times_has_this_fool_fired, fool_next;
+    reg [4:0] how_many_times_has_this_fool_fired, fool_next;
     reg [17:0] aim_control = 0;
     reg [17:0] fire_control = 0;
     reg [17:0] release_next = 0;    // initialize this to whatever then start incrementing by release_rband for each fire
     parameter   aim_left = 0,      // full left turn
-                aim_right = 100000,      // full right turn
-                aim_forward = 200000,   // forward on servo
+                aim_right = 200000,      // full right turn
+                aim_forward = 100000,   // forward on servo
                 release_rband = 50000; // enough spin to release a single rubber band
     initial begin
         counter = 0;
@@ -41,29 +41,31 @@ module servo_controller(
             firing_reg <= 1;
         else
             firing_reg <= 0;
-        if (fire_counter > 'd10) begin
+        if (fire_counter > 'd100000 && !fired) begin
             fire_counter <= 'd0;
             fired <= 1;     // latch so you don't fire twice
                         
-            if(how_many_times_has_this_fool_fired == 'd0) begin
-                how_many_times_has_this_fool_fired <= 'd1;
+            if(how_many_times_has_this_fool_fired < 'd2 && !fired) begin
+                how_many_times_has_this_fool_fired <= how_many_times_has_this_fool_fired + 1;
                 release_next <= 50000; // get ready to fire the next rubber band
             end
             
-            if(how_many_times_has_this_fool_fired == 'd1) begin
-                how_many_times_has_this_fool_fired <= 'd2;
+            else if(how_many_times_has_this_fool_fired < 'd4 && how_many_times_has_this_fool_fired >= 'd2 && !fired) begin
+                how_many_times_has_this_fool_fired <= how_many_times_has_this_fool_fired + 1;
                 release_next <= 100000;
             end
                         
-            if(how_many_times_has_this_fool_fired == 'd2) begin
-                how_many_times_has_this_fool_fired <= 'd3;
+            else if(how_many_times_has_this_fool_fired < 'd6 && how_many_times_has_this_fool_fired >= 'd4 && !fired) begin
+                how_many_times_has_this_fool_fired <= how_many_times_has_this_fool_fired + 1;
                 release_next <= 150000;
             end 
                         
-            if(how_many_times_has_this_fool_fired >= 'd3) begin
-                how_many_times_has_this_fool_fired <= 0;
+            else if(how_many_times_has_this_fool_fired >= 'd6 && !fired) begin
+                if(how_many_times_has_this_fool_fired == 'd6)
+                    how_many_times_has_this_fool_fired <= 'd7;
+                else if(how_many_times_has_this_fool_fired == 'd7)
+                    how_many_times_has_this_fool_fired <= 0;
                 release_next <= 0;
-                fool_next = 1;
             end
         end 
 
